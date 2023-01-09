@@ -57,6 +57,17 @@ const hasCategoryAndPriorityProperties = (requestQuery) => {
   );
 };
 
+const snakeCaseToCamelCase = (dbObject) => {
+  return {
+    id: dbObject.id,
+    todo: dbObject.todo,
+    category: dbObject.category,
+    priority: dbObject.priority,
+    status: dbObject.status,
+    dueDate: dbObject.due_date,
+  };
+};
+
 // API 1
 
 app.get("/todos/", async (request, response) => {
@@ -142,8 +153,10 @@ app.get("/todos/", async (request, response) => {
   switch (true) {
     case onlyStatus:
       if (status === "TO DO" || status === "IN PROGRESS" || status === "DONE") {
-        getTodosQuery = `
+        getStatusQuery = `
               SELECT * FROM todo WHERE status = '${status}';`;
+        const result = await db.all(getStatusQuery);
+        response.send(snakeCaseToCamelCase(result));
       } else {
         response.status(400);
         response.send("Invalid Todo Status");
@@ -152,8 +165,10 @@ app.get("/todos/", async (request, response) => {
 
     case onlyPriority:
       if (priority === "HIGH" || priority === "MEDIUM" || priority === "LOW") {
-        getTodosQuery = `
+        getPriorityQuery = `
               SELECT * FROM todo WHERE priority = '${priority}';`;
+        const result = await db.all(getPriorityQuery);
+        response.send(snakeCaseToCamelCase(result));
       } else {
         response.status(400);
         response.send("Invalid Todo Priority");
@@ -166,8 +181,10 @@ app.get("/todos/", async (request, response) => {
         category === "HOME" ||
         category === "LEARNING"
       ) {
-        getTodosQuery = `
+        getCategoryQuery = `
               SELECT * FROM todo WHERE category = '${category}';`;
+        const result = await db.all(getCategoryQuery);
+        response.send(snakeCaseToCamelCase(data));
       } else {
         response.status(400);
         response.send("Invalid Todo Category");
@@ -175,7 +192,7 @@ app.get("/todos/", async (request, response) => {
       break;
   }
   data = await db.all(getTodosQuery);
-  response.send(data);
+  response.send(snakeCaseToCamelCase(data));
 });
 
 //API 2
@@ -187,7 +204,7 @@ app.get("/todos/:todoId/", async (request, response) => {
     todo 
     WHERE id = ${todoId};`;
   const todo = await db.get(getTodoQuery);
-  response.send(todo);
+  response.send(snakeCaseToCamelCase(todo));
 });
 
 // API 3
@@ -196,7 +213,7 @@ app.get("/agenda/", async (request, response) => {
   const date = format(new Date(2021, 12, 12), "yyyy-MM-dd");
   const getDateQuery = `SELECT * FROM todo WHERE due_date = ${date};`;
   const result = await db.all(getDateQuery);
-  response.send(result);
+  response.send(snakeCaseToCamelCase(result));
 });
 
 // API 4
@@ -211,7 +228,7 @@ app.post("/todos/", async (request, response) => {
     ('${todo}', '${priority}', '${status}', '${category}', '${dueDate}');`;
 
   const result = await db.run(addTodoQuery);
-  response.send("Todo Added Successfully");
+  response.send("Todo Successfully Added");
 });
 
 // API 5
