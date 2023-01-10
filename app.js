@@ -83,7 +83,8 @@ app.get("/todos/", async (request, response) => {
 
   switch (true) {
     case hasStatusProperty(request.query):
-      getTodosQuery = `
+      if (status === "TO DO" || status === "IN PROGRESS" || status === "DONE") {
+        getTodosQuery = `
             SELECT * 
             FROM 
             todo
@@ -91,9 +92,14 @@ app.get("/todos/", async (request, response) => {
             todo LIKE '%${search_q}%'
             AND 
             status = '${status}';`;
+      } else {
+        response.status(400);
+        response.send("Invalid Todo Status");
+      }
       break;
     case hasPriorityProperty(request.query):
-      getTodosQuery = `
+      if (priority === "HIGH" || priority === "MEDIUM" || priority === "LOW") {
+        getTodosQuery = `
             SELECT * 
             FROM 
             todo
@@ -101,9 +107,17 @@ app.get("/todos/", async (request, response) => {
             todo LIKE '%${search_q}%'
             AND 
             priority = '${priority}';`;
+      } else {
+        response.status(400);
+        response.send("Invalid Todo Priority");
+      }
       break;
     case hasPriorityAndStatusProperties(request.query):
-      getTodosQuery = `
+      if (
+        (status === "TO DO" || status === "IN PROGRESS" || status === "DONE") &&
+        (priority === "HIGH" || priority === "MEDIUM" || priority === "LOW")
+      ) {
+        getTodosQuery = `
             SELECT * 
             FROM 
             todo
@@ -111,9 +125,14 @@ app.get("/todos/", async (request, response) => {
             todo LIKE '%${search_q}%' 
             AND priority = '${priority}'
             AND status = '${status}';`;
+      }
       break;
     case hasCategoryAndStatusProperties(request.query):
-      getTodosQuery = `
+      if (
+        (status === "TO DO" || status === "IN PROGRESS" || status === "DONE") &&
+        (category === "WORK" || category === "HOME" || category === "LEARNING")
+      ) {
+        getTodosQuery = `
             SELECT * 
             FROM 
             todo
@@ -121,9 +140,15 @@ app.get("/todos/", async (request, response) => {
             todo LIKE '%${search_q}%' 
             AND category = '${category}'
             AND status = '${status}';`;
+      }
       break;
     case hasCategoryProperty(request.query):
-      getTodosQuery = `
+      if (
+        category === "WORK" ||
+        category === "HOME" ||
+        category === "LEARNING"
+      ) {
+        getTodosQuery = `
             SELECT * 
             FROM 
             todo
@@ -131,9 +156,19 @@ app.get("/todos/", async (request, response) => {
             todo LIKE '%${search_q}%'
             AND 
             category = '${category}';`;
+      } else {
+        response.status(400);
+        response.send("Invalid Todo Category");
+      }
       break;
     case hasCategoryAndPriorityProperties(request.query):
-      getTodosQuery = `
+      if (
+        (category === "WORK" ||
+          category === "HOME" ||
+          category === "LEARNING") &&
+        (priority === "HIGH" || priority === "MEDIUM" || priority === "LOW")
+      ) {
+        getTodosQuery = `
             SELECT * 
             FROM 
             todo
@@ -141,6 +176,7 @@ app.get("/todos/", async (request, response) => {
             todo LIKE '%${search_q}%' 
             AND category = '${category}'
             AND priority = '${priority}';`;
+      }
       break;
     default:
       getTodosQuery = `
@@ -148,48 +184,6 @@ app.get("/todos/", async (request, response) => {
       todo 
       WHERE 
       todo LIKE '%${search_q}%';`;
-  }
-
-  switch (true) {
-    case onlyStatus:
-      if (status === "TO DO" || status === "IN PROGRESS" || status === "DONE") {
-        getStatusQuery = `
-              SELECT * FROM todo WHERE status = '${status}';`;
-        const result = await db.all(getStatusQuery);
-        response.send(snakeCaseToCamelCase(result));
-      } else {
-        response.status(400);
-        response.send("Invalid Todo Status");
-      }
-      break;
-
-    case onlyPriority:
-      if (priority === "HIGH" || priority === "MEDIUM" || priority === "LOW") {
-        getPriorityQuery = `
-              SELECT * FROM todo WHERE priority = '${priority}';`;
-        const result = await db.all(getPriorityQuery);
-        response.send(snakeCaseToCamelCase(result));
-      } else {
-        response.status(400);
-        response.send("Invalid Todo Priority");
-      }
-      break;
-
-    case onlyCategory:
-      if (
-        category === "WORK" ||
-        category === "HOME" ||
-        category === "LEARNING"
-      ) {
-        getCategoryQuery = `
-              SELECT * FROM todo WHERE category = '${category}';`;
-        const result = await db.all(getCategoryQuery);
-        response.send(snakeCaseToCamelCase(data));
-      } else {
-        response.status(400);
-        response.send("Invalid Todo Category");
-      }
-      break;
   }
   data = await db.all(getTodosQuery);
   response.send(snakeCaseToCamelCase(data));

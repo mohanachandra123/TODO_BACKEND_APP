@@ -1,4 +1,4 @@
-GET http://localhost:3000/todos/?status=TO%20DO
+GET http://localhost:3000/todos/?status=NOT%20DONE
 ###
 
 PUT http://localhost:3000/todos/1/
