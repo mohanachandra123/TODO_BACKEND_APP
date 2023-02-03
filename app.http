@@ -10,4 +10,4 @@ Content-Type: application/json
 
 ###
 
-DELETE http://localhost:3000/todos/1/
+GET http://localhost:3000/agenda/?date=2021-12-12

@@ -2,6 +2,7 @@ const express = require("express");
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
 const path = require("path");
+const isValid = require("date-fns/isValid");
 const format = require("date-fns/format");
 
 const dbPath = path.join(__dirname, "todoApplication.db");
@@ -186,7 +187,8 @@ app.get("/todos/", async (request, response) => {
       todo LIKE '%${search_q}%';`;
   }
   data = await db.all(getTodosQuery);
-  response.send(snakeCaseToCamelCase(data));
+  const result = data.map((item) => snakeCaseToCamelCase(item));
+  response.send(result);
 });
 
 //API 2
@@ -204,10 +206,28 @@ app.get("/todos/:todoId/", async (request, response) => {
 // API 3
 
 app.get("/agenda/", async (request, response) => {
-  const date = format(new Date(2021, 12, 12), "yyyy-MM-dd");
-  const getDateQuery = `SELECT * FROM todo WHERE due_date = ${date};`;
-  const result = await db.all(getDateQuery);
-  response.send(snakeCaseToCamelCase(result));
+  const { date } = request.query;
+  if (date === undefined) {
+    response.status(400);
+    response.send("Invalid Due Date");
+  } else {
+    const isValidDate = isValid(new Date(date));
+    if (isValidDate) {
+      const formattedDate = format(new Date(date), "yyyy-MM-dd");
+      const getQuery = `
+          SELECT 
+          id, todo, priority, status, category, due_date AS dueDate
+          FROM todo
+          WHERE due_date = '${formattedDate}';`;
+
+      const todos = await db.all(getQuery);
+      const result = todos.map((item) => snakeCaseToCamelCase(item));
+      response.send(result);
+    } else {
+      response.status(400);
+      response.send("Invalid Due Date");
+    }
+  }
 });
 
 // API 4
