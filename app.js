@@ -44,17 +44,17 @@ const hasStatusProperty = (requestQuery) => {
 
 const hasCategoryAndStatusProperties = (requestQuery) => {
   return (
-    requestQuery.Category !== undefined && requestQuery.status !== undefined
+    requestQuery.category !== undefined && requestQuery.status !== undefined
   );
 };
 
 const hasCategoryProperty = (requestQuery) => {
-  return requestQuery.Category !== undefined;
+  return requestQuery.category !== undefined;
 };
 
 const hasCategoryAndPriorityProperties = (requestQuery) => {
   return (
-    requestQuery.Category !== undefined && requestQuery.priority !== undefined
+    requestQuery.category !== undefined && requestQuery.priority !== undefined
   );
 };
 
