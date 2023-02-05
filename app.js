@@ -221,8 +221,7 @@ app.get("/agenda/", async (request, response) => {
           WHERE due_date = '${formattedDate}';`;
 
       const todos = await db.all(getQuery);
-      const result = todos.map((item) => snakeCaseToCamelCase(item));
-      response.send(result);
+      response.send(todos);
     } else {
       response.status(400);
       response.send("Invalid Due Date");
