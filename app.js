@@ -248,8 +248,13 @@ app.post("/todos/", async (request, response) => {
     VALUES 
     ('${todo}', '${priority}', '${status}', '${category}', '${formattedDate}');`;
 
-    const result = await db.run(addTodoQuery);
-    response.send("Todo Successfully Added");
+      const result = await db.run(addTodoQuery);
+      response.send("Todo Successfully Added");
+    } else {
+      response.status(400);
+      response.send("Invalid Due Date");
+    }
+  }
 });
 
 // API 5
