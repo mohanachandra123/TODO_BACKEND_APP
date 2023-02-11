@@ -234,14 +234,22 @@ app.get("/agenda/", async (request, response) => {
 app.post("/todos/", async (request, response) => {
   const todoDetails = request.body;
   const { id, todo, priority, status, category, dueDate } = todoDetails;
-  const addTodoQuery = `
+
+  if (dueDate === undefined) {
+    response.status(400);
+    response.send("Invalid Due Date");
+  } else {
+    const isValidDate = isValid(new Date(dueDate));
+    if (isValidDate) {
+      const formattedDate = format(new Date(dueDate), "yyyy-MM-dd");
+      const addTodoQuery = `
     INSERT INTO 
     todo (todo, priority, status, category, due_date)
     VALUES 
-    ('${todo}', '${priority}', '${status}', '${category}', '${dueDate}');`;
+    ('${todo}', '${priority}', '${status}', '${category}', '${formattedDate}');`;
 
-  const result = await db.run(addTodoQuery);
-  response.send("Todo Successfully Added");
+    const result = await db.run(addTodoQuery);
+    response.send("Todo Successfully Added");
 });
 
 // API 5
