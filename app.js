@@ -251,34 +251,24 @@ app.post("/todos/", async (request, response) => {
   let isValidDueDate = true;
   const isValidDate = isValid(new Date(dueDate));
 
-  if (priority !== "HIGH" || priority !== "MEDIUM" || priority !== "LOW") {
-    errorColumn = "Todo Priority";
-    isValidPriority = false;
-  } else if (
-    status !== "TO DO" ||
-    status !== "IN PROGRESS" ||
-    status !== "DONE"
-  ) {
-    errorColumn = "Todo Status";
-    isValidStatus = false;
-  } else if (
-    category !== "WORK" ||
-    category !== "HOME" ||
-    category !== "LEARNING"
-  ) {
-    errorColumn = "Todo Category";
-    isValidCategory = false;
-  } else if (isValidDate === false) {
-    errorColumn = "Due Date";
-    isValidDueDate = false;
-  }
-
-  if (dueDate === undefined) {
-    response.status(400);
-    response.send("Invalid Due Date");
-  } else {
-    // const isValidDate = isValid(new Date(dueDate));
-    if (isValidCategory && isValidDueDate && isValidPriority && isValidStatus) {
+  switch (true) {
+    case priority !== "HIGH" || priority !== "MEDIUM" || priority !== "LOW":
+      response.status(400);
+      response.send("Invalid Todo Priority");
+      break;
+    case status !== "TO DO" || status !== "IIN PROGRESS" || status !== "DONE":
+      response.status(400);
+      response.send("Invalid Todo Status");
+      break;
+    case category !== "WORK" || category !== "HOME" || category !== "LEARNING":
+      response.status(400);
+      response.send("Invalid Todo Category");
+      break;
+    case isValidDate === false:
+      response.status(400);
+      response.send("Invalid Due Date");
+      break;
+    default:
       const formattedDate = format(new Date(dueDate), "yyyy-MM-dd");
       const addTodoQuery = `
     INSERT INTO 
@@ -288,10 +278,6 @@ app.post("/todos/", async (request, response) => {
 
       const result = await db.run(addTodoQuery);
       response.send("Todo Successfully Added");
-    } else {
-      response.status(400);
-      response.send(`Invalid ${errorColumn}`);
-    }
   }
 });
 
