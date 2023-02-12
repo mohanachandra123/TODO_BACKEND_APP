@@ -74,6 +74,7 @@ const snakeCaseToCamelCase = (dbObject) => {
 app.get("/todos/", async (request, response) => {
   let data = null;
   let getTodosQuery = "";
+  let validValues;
   const { search_q = "", priority, status, category, date } = request.query;
   const onlyStatus =
     status !== undefined && priority === undefined && category === undefined;
@@ -85,6 +86,7 @@ app.get("/todos/", async (request, response) => {
   switch (true) {
     case hasStatusProperty(request.query):
       if (status === "TO DO" || status === "IN PROGRESS" || status === "DONE") {
+        validValues = true;
         getTodosQuery = `
             SELECT * 
             FROM 
@@ -100,6 +102,7 @@ app.get("/todos/", async (request, response) => {
       break;
     case hasPriorityProperty(request.query):
       if (priority === "HIGH" || priority === "MEDIUM" || priority === "LOW") {
+        validValues = true;
         getTodosQuery = `
             SELECT * 
             FROM 
@@ -118,6 +121,7 @@ app.get("/todos/", async (request, response) => {
         (status === "TO DO" || status === "IN PROGRESS" || status === "DONE") &&
         (priority === "HIGH" || priority === "MEDIUM" || priority === "LOW")
       ) {
+        validValues = true;
         getTodosQuery = `
             SELECT * 
             FROM 
@@ -133,6 +137,7 @@ app.get("/todos/", async (request, response) => {
         (status === "TO DO" || status === "IN PROGRESS" || status === "DONE") &&
         (category === "WORK" || category === "HOME" || category === "LEARNING")
       ) {
+        validValues = true;
         getTodosQuery = `
             SELECT * 
             FROM 
@@ -149,6 +154,7 @@ app.get("/todos/", async (request, response) => {
         category === "HOME" ||
         category === "LEARNING"
       ) {
+        validValues = true;
         getTodosQuery = `
             SELECT * 
             FROM 
@@ -169,6 +175,7 @@ app.get("/todos/", async (request, response) => {
           category === "LEARNING") &&
         (priority === "HIGH" || priority === "MEDIUM" || priority === "LOW")
       ) {
+        validValues = true;
         getTodosQuery = `
             SELECT * 
             FROM 
@@ -180,15 +187,18 @@ app.get("/todos/", async (request, response) => {
       }
       break;
     default:
+      validValues = true;
       getTodosQuery = `
       SELECT * FROM
       todo 
       WHERE 
       todo LIKE '%${search_q}%';`;
   }
-  data = await db.all(getTodosQuery);
-  const result = data.map((item) => snakeCaseToCamelCase(item));
-  response.send(result);
+  if (validValues === true) {
+    data = await db.all(getTodosQuery);
+    const result = data.map((item) => snakeCaseToCamelCase(item));
+    response.send(result);
+  }
 });
 
 //API 2
@@ -234,13 +244,41 @@ app.get("/agenda/", async (request, response) => {
 app.post("/todos/", async (request, response) => {
   const todoDetails = request.body;
   const { id, todo, priority, status, category, dueDate } = todoDetails;
+  let errorColumn = "";
+  let isValidPriority = true;
+  let isValidStatus = true;
+  let isValidCategory = true;
+  let isValidDueDate = true;
+  const isValidDate = isValid(new Date(dueDate));
+
+  if (priority !== "HIGH" || priority !== "MEDIUM" || priority !== "LOW") {
+    errorColumn = "Todo Priority";
+    isValidPriority = false;
+  } else if (
+    status !== "TO DO" ||
+    status !== "IN PROGRESS" ||
+    status !== "DONE"
+  ) {
+    errorColumn = "Todo Status";
+    isValidStatus = false;
+  } else if (
+    category !== "WORK" ||
+    category !== "HOME" ||
+    category !== "LEARNING"
+  ) {
+    errorColumn = "Todo Category";
+    isValidCategory = false;
+  } else if (isValidDate === false) {
+    errorColumn = "Due Date";
+    isValidDueDate = false;
+  }
 
   if (dueDate === undefined) {
     response.status(400);
     response.send("Invalid Due Date");
   } else {
-    const isValidDate = isValid(new Date(dueDate));
-    if (isValidDate) {
+    // const isValidDate = isValid(new Date(dueDate));
+    if (isValidCategory && isValidDueDate && isValidPriority && isValidStatus) {
       const formattedDate = format(new Date(dueDate), "yyyy-MM-dd");
       const addTodoQuery = `
     INSERT INTO 
@@ -252,7 +290,7 @@ app.post("/todos/", async (request, response) => {
       response.send("Todo Successfully Added");
     } else {
       response.status(400);
-      response.send("Invalid Due Date");
+      response.send(`Invalid ${errorColumn}`);
     }
   }
 });
