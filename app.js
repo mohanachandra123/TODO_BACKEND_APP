@@ -294,6 +294,7 @@ app.put("/todos/:todoId/", async (request, response) => {
   const { todoId } = request.params;
   let updateColumn = "";
   const requestBody = request.body;
+  const { priority, status, category, dueDate } = requestBody;
 
   switch (true) {
     case requestBody.status !== undefined:
@@ -332,9 +333,9 @@ app.put("/todos/:todoId/", async (request, response) => {
       break;
     default:
       const previousTodoQuery = `
-    SELECT * 
+     SELECT *
     FROM todo
-    WHERE 
+    WHERE
     id = ${todoId};`;
 
       const previousTodo = await db.get(previousTodoQuery);
@@ -348,15 +349,15 @@ app.put("/todos/:todoId/", async (request, response) => {
       } = request.body;
 
       const updateTodoQuery = `
-    UPDATE todo 
-    SET 
+     UPDATE todo
+     SET
     todo = '${todo}',
-    status = '${status}',
-    priority = '${priority}',
-    category = '${category}',
-    due_date = '${due_date}'
-    WHERE 
-    id = ${todoId};`;
+     status = '${status}',
+     priority = '${priority}',
+     category = '${category}',
+     due_date = '${due_date}'
+     WHERE
+     id = ${todoId};`;
 
       await db.run(updateTodoQuery);
       response.send(`${updateColumn} Updated`);
