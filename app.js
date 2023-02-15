@@ -71,6 +71,10 @@ const checkDate = (dueDate) => {
   return !isValid(new Date(dueDate));
 };
 
+const correctDate = (dueDate) => {
+  return isValid(new Date(dueDate));
+};
+
 const snakeCaseToCamelCase = (dbObject) => {
   return {
     id: dbObject.id,
@@ -293,62 +297,72 @@ app.post("/todos/", async (request, response) => {
 app.put("/todos/:todoId/", async (request, response) => {
   const { todoId } = request.params;
   let updateColumn = "";
+  let invalidColumn = "";
+  let validValuesEntered;
   const requestBody = request.body;
-  const { priority, status, category, dueDate } = requestBody;
+  const { priority, status, category, dueDate } = request.body;
 
   switch (true) {
     case requestBody.status !== undefined:
-      updateColumn = "Status";
+      if (validStatus(status) === true) {
+        updateColumn = "Status";
+        validValuesEntered = true;
+      } else {
+        validValuesEntered = false;
+        invalidColumn = "Todo Status";
+      }
       break;
     case requestBody.priority !== undefined:
-      updateColumn = "Priority";
+      if (validPriority(priority) === true) {
+        updateColumn = "Priority";
+        validValuesEntered = true;
+      } else {
+        validValuesEntered = false;
+        invalidColumn = "Todo Priority";
+      }
       break;
     case requestBody.todo !== undefined:
       updateColumn = "Todo";
+      validValuesEntered = true;
       break;
     case requestBody.category !== undefined:
-      updateColumn = "Category";
+      if (validCategory(category) === true) {
+        updateColumn = "Category";
+        validValuesEntered = true;
+      } else {
+        validValuesEntered = false;
+        invalidColumn = "Todo Category";
+      }
       break;
     case requestBody.dueDate !== undefined:
-      updateColumn = "Due Date";
+      if (correctDate(dueDate) === true) {
+        updateColumn = "Due Date";
+        validValuesEntered = true;
+      } else {
+        validValuesEntered = false;
+        invalidColumn = "Due Date";
+      }
       break;
   }
 
-  switch (true) {
-    case !validPriority(priority):
-      response.status(400);
-      response.send("Invalid Todo Priority");
-      break;
-    case !validStatus(status):
-      response.status(400);
-      response.send("Invalid Todo Status");
-      break;
-    case !validCategory(category):
-      response.status(400);
-      response.send("Invalid Todo Category");
-      break;
-    case checkDate(dueDate):
-      response.status(400);
-      response.send("Invalid Due Date");
-      break;
-    default:
-      const previousTodoQuery = `
+  if (validValuesEntered === true) {
+    const previousTodoQuery = `
      SELECT *
     FROM todo
     WHERE
     id = ${todoId};`;
 
-      const previousTodo = await db.get(previousTodoQuery);
+    const previousTodo = await db.get(previousTodoQuery);
 
-      const {
-        status = previousTodo.status,
-        priority = previousTodo.priority,
-        todo = previousTodo.todo,
-        category = previousTodo.category,
-        due_date = previousTodo.due_date,
-      } = request.body;
+    const {
+      status = previousTodo.status,
+      priority = previousTodo.priority,
+      todo = previousTodo.todo,
+      category = previousTodo.category,
+      due_date = previousTodo.due_date,
+    } = request.body;
 
-      const updateTodoQuery = `
+    const updateTodoQuery = `
      UPDATE todo
      SET
     todo = '${todo}',
@@ -359,8 +373,11 @@ app.put("/todos/:todoId/", async (request, response) => {
      WHERE
      id = ${todoId};`;
 
-      await db.run(updateTodoQuery);
-      response.send(`${updateColumn} Updated`);
+    await db.run(updateTodoQuery);
+    response.send(`${updateColumn} Updated`);
+  } else {
+    response.status(400);
+    response.send(`Invalid ${invalidColumn}`);
   }
 });
 
