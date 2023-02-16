@@ -283,9 +283,9 @@ app.post("/todos/", async (request, response) => {
       const formattedDate = format(new Date(dueDate), "yyyy-MM-dd");
       const addTodoQuery = `
     INSERT INTO 
-    todo (todo, priority, status, category, due_date)
+    todo (id,todo, priority, status, category, due_date)
     VALUES 
-    ('${todo}', '${priority}', '${status}', '${category}', '${formattedDate}');`;
+    (${id},'${todo}', '${priority}', '${status}', '${category}', '${formattedDate}');`;
 
       const result = await db.run(addTodoQuery);
       response.send("Todo Successfully Added");
@@ -359,7 +359,7 @@ app.put("/todos/:todoId/", async (request, response) => {
       priority = previousTodo.priority,
       todo = previousTodo.todo,
       category = previousTodo.category,
-      due_date = previousTodo.due_date,
+      dueDate = previousTodo.due_date,
     } = request.body;
 
     const updateTodoQuery = `
@@ -369,7 +369,7 @@ app.put("/todos/:todoId/", async (request, response) => {
      status = '${status}',
      priority = '${priority}',
      category = '${category}',
-     due_date = '${due_date}'
+     due_date = '${dueDate}'
      WHERE
      id = ${todoId};`;
 
